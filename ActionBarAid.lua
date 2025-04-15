@@ -27,11 +27,12 @@ local spellSourceMap = {}
 function ActionBarAid.buildSpellSourceMap()
   wipe(spellSourceMap)
 
-  -- 1. Hero talents
-  local heroTrees = C_ClassTalents.GetHeroTalentTreeIDs()
-  for _, treeID in ipairs(heroTrees or {}) do
-    for _, nodeID in ipairs(C_ClassTalents.GetHeroTalentNodes(treeID) or {}) do
-      local nodeInfo = C_Traits.GetNodeInfo(treeID, nodeID)
+  -- 1. Hero talents (WoW 11.1+ API)
+  local heroSpecID = C_ClassTalents.GetActiveHeroTalentSpec()
+  if heroSpecID then
+    local subTreeInfo = C_Traits.GetSubTreeInfo(heroSpecID)
+    for _, nodeID in ipairs(subTreeInfo.nodes or {}) do
+      local nodeInfo = C_Traits.GetNodeInfo(heroSpecID, nodeID)
       for _, entryID in ipairs(nodeInfo.entryIDs or {}) do
         local entry = C_Traits.GetEntryInfo(entryID)
         if entry and entry.definitionID then
