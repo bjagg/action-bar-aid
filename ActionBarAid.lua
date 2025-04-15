@@ -78,14 +78,23 @@ end
 -- Slot processing
 function ActionBarAid.processSlot(slot)
   local actionType, id = GetActionInfo(slot)
-  if actionType ~= "spell" or not id then return nil end
 
-  return {
+  local info = {
     slot = slot,
-    spellID = id,
-    source = ActionBarAid.getSpellSource(id),
-    passiveOrUnavailable = ActionBarAid.isPassiveOrUnavailable(id)
+    actionType = actionType,
+    id = id,
+    valid = (actionType == "spell" and id ~= nil),
+    spellID = (actionType == "spell") and id or nil,
   }
+
+  if info.spellID then
+    info.source = ActionBarAid.getSpellSource(info.spellID)
+    info.passiveOrUnavailable = ActionBarAid.isPassiveOrUnavailable(info.spellID)
+    local spellInfo = C_Spell.GetSpellInfo(info.spellID)
+    info.spellName = spellInfo and spellInfo.name or "Unknown"
+  end
+
+  return info
 end
 
 -- Scan all action bars
@@ -113,30 +122,43 @@ function ActionBarAid.highlightSlot(slotInfo)
   local frame = _G["ActionButton"..slotInfo.slot]
   if not frame or not frame.Border then return end
 
-  local spellInfo = C_Spell.GetSpellInfo(slotInfo.spellID)
-  local spellName = spellInfo and spellInfo.name or "Unknown"
-
   local entry = {
     slot = slotInfo.slot,
     spellID = slotInfo.spellID,
     source = slotInfo.source,
     passiveOrUnavailable = slotInfo.passiveOrUnavailable,
-    spellName = spellName
+    spellName = slotInfo.spellName
   }
 
   table.insert(ActionBarAidDebugLog, entry)
 
   if slotInfo.passiveOrUnavailable then
     frame.Border:SetVertexColor(1, 0, 0) -- Red border
+    debugPrint("Slot " .. entry.slot .. ": passive/unavailable - " .. entry.spellName)
+  else
+    local color = GetColorForSource(entry.source)
+    frame.Border:SetVertexColor(unpack(color))
     debugPrint("Slot " .. entry.slot .. ": " .. entry.source .. " - " .. entry.spellName)
   end
 end
 
 -- Apply to all
 function ActionBarAid.refresh()
+  if DEBUG_MODE then
+    debugPrint("---- Begin Action Bar Scan ----")
+  end
+
   local results = ActionBarAid.scanActionBars()
   for _, slotInfo in ipairs(results) do
-    ActionBarAid.highlightSlot(slotInfo)
+    if slotInfo.valid then
+      ActionBarAid.highlightSlot(slotInfo)
+    elseif DEBUG_MODE then
+      debugPrint("Slot " .. slotInfo.slot .. ": " .. tostring(slotInfo.actionType) .. " (id: " .. tostring(slotInfo.id) .. ")")
+    end
+  end
+
+  if DEBUG_MODE then
+    debugPrint("---- End Action Bar Scan ----")
   end
 end
 
