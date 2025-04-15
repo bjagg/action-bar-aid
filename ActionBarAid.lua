@@ -75,6 +75,28 @@ function ActionBarAid.isPassiveOrUnavailable(spellID)
   return C_Spell.IsSpellPassive(spellID) or not IsSpellKnown(spellID)
 end
 
+-- Get all named action buttons from UI (WoW 11.0+ safe)
+local namedButtons = {
+  "ActionButton",
+  "MultiBarBottomLeftButton",
+  "MultiBarBottomRightButton",
+  "MultiBarRightButton",
+  "MultiBarLeftButton",
+}
+
+local function getAllActionButtons()
+  local buttons = {}
+  for _, prefix in ipairs(namedButtons) do
+    for i = 1, 12 do
+      local button = _G[prefix .. i]
+      if button and button.action then
+        table.insert(buttons, button)
+      end
+    end
+  end
+  return buttons
+end
+
 -- Slot processing
 function ActionBarAid.processSlot(slot)
   local actionType, id = GetActionInfo(slot)
@@ -97,11 +119,14 @@ function ActionBarAid.processSlot(slot)
   return info
 end
 
--- Scan all action bars
+-- Scan all visible buttons from current bars
 function ActionBarAid.scanActionBars()
-  local slots = {}
-  for i = 1, 120 do table.insert(slots, i) end
-  return map(slots, ActionBarAid.processSlot)
+  local buttons = getAllActionButtons()
+  return map(buttons, function(button)
+    local slotInfo = ActionBarAid.processSlot(button.action)
+    slotInfo.frameName = button:GetName()
+    return slotInfo
+  end)
 end
 
 -- Color utility
@@ -119,7 +144,7 @@ end
 -- Apply visual highlight + log
 function ActionBarAid.highlightSlot(slotInfo)
   if not slotInfo then return end
-  local frame = _G["ActionButton"..slotInfo.slot]
+  local frame = _G[slotInfo.frameName]
   if not frame or not frame.Border then return end
 
   local entry = {
@@ -134,11 +159,11 @@ function ActionBarAid.highlightSlot(slotInfo)
 
   if slotInfo.passiveOrUnavailable then
     frame.Border:SetVertexColor(1, 0, 0) -- Red border
-    debugPrint("Slot " .. entry.slot .. ": passive/unavailable - " .. entry.spellName)
+    debugPrint("[" .. slotInfo.frameName .. "] Slot " .. entry.slot .. ": passive/unavailable - " .. entry.spellName)
   else
     local color = GetColorForSource(entry.source)
     frame.Border:SetVertexColor(unpack(color))
-    debugPrint("Slot " .. entry.slot .. ": " .. entry.source .. " - " .. entry.spellName)
+    debugPrint("[" .. slotInfo.frameName .. "] Slot " .. entry.slot .. ": " .. entry.source .. " - " .. entry.spellName)
   end
 end
 
@@ -153,7 +178,7 @@ function ActionBarAid.refresh()
     if slotInfo.valid then
       ActionBarAid.highlightSlot(slotInfo)
     elseif DEBUG_MODE then
-      debugPrint("Slot " .. slotInfo.slot .. ": " .. tostring(slotInfo.actionType) .. " (id: " .. tostring(slotInfo.id) .. ")")
+      debugPrint("[" .. (slotInfo.frameName or "unknown") .. "] Slot " .. slotInfo.slot .. ": " .. tostring(slotInfo.actionType) .. " (id: " .. tostring(slotInfo.id) .. ")")
     end
   end
 
