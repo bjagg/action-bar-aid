@@ -71,7 +71,7 @@ end
 
 -- Passive/unavailable detection
 function ActionBarAid.isPassiveOrUnavailable(spellID)
-  return IsPassiveSpell(spellID) or not IsSpellKnown(spellID)
+  return C_Spell.IsSpellPassive(spellID) or not IsSpellKnown(spellID)
 end
 
 -- Slot processing
