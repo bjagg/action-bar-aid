@@ -23,9 +23,11 @@ end
 
 -- Spell source classification cache
 local spellSourceMap = {}
+local spellSourceMapByName = {}
 
 function ActionBarAid.buildSpellSourceMap()
   wipe(spellSourceMap)
+  wipe(spellSourceMapByName)
 
   local configID = C_ClassTalents.GetActiveConfigID()
   local heroSpecID = C_ClassTalents.GetActiveHeroTalentSpec()
@@ -41,6 +43,11 @@ function ActionBarAid.buildSpellSourceMap()
           local def = C_Traits.GetDefinitionInfo(entry.definitionID)
           if def and def.spellID then
             spellSourceMap[def.spellID] = "hero"
+            local info = C_Spell.GetSpellInfo(def.spellID)
+            if info and info.name then
+              spellSourceMapByName[info.name] = "hero"
+            end
+            debugPrint("Mapped hero talent spellID " .. def.spellID .. " as 'hero'")
           end
         end
       end
@@ -58,6 +65,11 @@ function ActionBarAid.buildSpellSourceMap()
           if def and def.spellID then
             local source = def.specID and "spec" or "talent"
             spellSourceMap[def.spellID] = source
+            local info = C_Spell.GetSpellInfo(def.spellID)
+            if info and info.name then
+              spellSourceMapByName[info.name] = source
+            end
+            debugPrint("Mapped talent spellID " .. def.spellID .. " as '" .. source .. "'")
           end
         end
       end
@@ -65,14 +77,32 @@ function ActionBarAid.buildSpellSourceMap()
   end
 end
 
--- Source lookup
+-- Source lookup with fallback
 function ActionBarAid.getSpellSource(spellID)
-  return spellSourceMap[spellID] or "core"
+  if spellSourceMap[spellID] then
+    return spellSourceMap[spellID]
+  end
+  local info = C_Spell.GetSpellInfo(spellID)
+  if info and info.name and spellSourceMapByName[info.name] then
+    return spellSourceMapByName[info.name]
+  end
+  return "core"
 end
 
--- Passive/unavailable detection
+-- Passive/unavailable detection with logging
 function ActionBarAid.isPassiveOrUnavailable(spellID)
-  return C_Spell.IsSpellPassive(spellID) or not IsSpellKnown(spellID)
+  local isPassive = C_Spell.IsSpellPassive(spellID)
+  local isKnown = IsSpellKnown(spellID)
+  if DEBUG_MODE then
+    local info = C_Spell.GetSpellInfo(spellID)
+    local name = info and info.name or "Unknown"
+    if not isKnown then
+      debugPrint("Spell '" .. name .. "' (" .. spellID .. ") is not known")
+    elseif isPassive then
+      debugPrint("Spell '" .. name .. "' (" .. spellID .. ") is passive")
+    end
+  end
+  return isPassive or not isKnown
 end
 
 -- Get all named action buttons from UI (WoW 11.0+ safe)
