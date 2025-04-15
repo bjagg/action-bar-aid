@@ -112,12 +112,15 @@ function ActionBarAid.highlightSlot(slotInfo)
   local frame = _G["ActionButton"..slotInfo.slot]
   if not frame or not frame.Border then return end
 
+  local spellInfo = C_Spell.GetSpellInfo(slotInfo.spellID)
+  local spellName = spellInfo and spellInfo.name or "Unknown"
+
   local entry = {
     slot = slotInfo.slot,
     spellID = slotInfo.spellID,
     source = slotInfo.source,
     passiveOrUnavailable = slotInfo.passiveOrUnavailable,
-    spellName = GetSpellInfo(slotInfo.spellID)
+    spellName = spellName
   }
 
   table.insert(ActionBarAidDebugLog, entry)
