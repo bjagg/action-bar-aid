@@ -141,11 +141,24 @@ local function GetColorForSource(source)
   return colors[source] or {1, 1, 1}
 end
 
+-- Apply color to various frame parts
+local function applyColorToFrame(frame, color)
+  if frame.Border then
+    frame.Border:SetVertexColor(unpack(color))
+  elseif frame.IconBorder then
+    frame.IconBorder:SetVertexColor(unpack(color))
+  elseif frame.Icon then
+    frame.Icon:SetVertexColor(unpack(color))
+  else
+    debugPrint("No colorable region found on " .. frame:GetName())
+  end
+end
+
 -- Apply visual highlight + log
 function ActionBarAid.highlightSlot(slotInfo)
   if not slotInfo then return end
   local frame = _G[slotInfo.frameName]
-  if not frame or not frame.Border then return end
+  if not frame then return end
 
   local entry = {
     slot = slotInfo.slot,
@@ -158,11 +171,11 @@ function ActionBarAid.highlightSlot(slotInfo)
   table.insert(ActionBarAidDebugLog, entry)
 
   if slotInfo.passiveOrUnavailable then
-    frame.Border:SetVertexColor(1, 0, 0) -- Red border
+    applyColorToFrame(frame, {1, 0, 0}) -- Red border
     debugPrint("[" .. slotInfo.frameName .. "] Slot " .. entry.slot .. ": passive/unavailable - " .. entry.spellName)
   else
     local color = GetColorForSource(entry.source)
-    frame.Border:SetVertexColor(unpack(color))
+    applyColorToFrame(frame, color)
     debugPrint("[" .. slotInfo.frameName .. "] Slot " .. entry.slot .. ": " .. entry.source .. " - " .. entry.spellName)
   end
 end
