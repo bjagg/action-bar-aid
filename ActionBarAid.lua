@@ -173,7 +173,6 @@ end
 
 -- Apply color to various frame parts
 local function applyColorToFrame(frame, color)
-  debugPrint("Coloring " .. frame)
   if frame.Border then
     frame.Border:SetVertexColor(unpack(color))
   elseif frame.IconBorder then
