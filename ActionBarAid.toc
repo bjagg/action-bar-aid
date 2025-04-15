@@ -1,0 +1,9 @@
+## Interface: 110100
+## Title: ActionBarAid
+## Version: 0.1.0
+## Notes: Highlights passive or unavailable spells and color-codes action bar abilities by source
+## Author: bjagg
+## Category-enUS: User Interface
+## SavedVariables: ActionBarAidDebugLog
+
+ActionBarAid.lua
