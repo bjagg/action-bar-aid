@@ -21,6 +21,19 @@ local function debugPrint(msg)
   end
 end
 
+-- Debug table dump
+local function debugDumpTable(tbl, indent)
+  indent = indent or ""
+  for k, v in pairs(tbl) do
+    local key = tostring(k)
+    local value = type(v) == "table" and "{table}" or tostring(v)
+    debugPrint(indent .. key .. ": " .. value)
+    if type(v) == "table" then
+      debugDumpTable(v, indent .. "  ")
+    end
+  end
+end
+
 -- Spell source classification cache
 local spellSourceMap = {}
 local spellSourceMapByName = {}
@@ -144,6 +157,10 @@ function ActionBarAid.processSlot(slot)
     info.passiveOrUnavailable = ActionBarAid.isPassiveOrUnavailable(info.spellID)
     local spellInfo = C_Spell.GetSpellInfo(info.spellID)
     info.spellName = spellInfo and spellInfo.name or "Unknown"
+    if DEBUG_MODE and spellInfo then
+      debugPrint("SpellInfo for ID " .. info.spellID .. ":")
+      debugDumpTable(spellInfo, "  ")
+    end
   end
 
   return info
