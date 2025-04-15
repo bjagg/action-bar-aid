@@ -128,11 +128,7 @@ function ActionBarAid.highlightSlot(slotInfo)
 
   if slotInfo.passiveOrUnavailable then
     frame.Border:SetVertexColor(1, 0, 0) -- Red border
-    debugPrint("Slot " .. entry.slot .. ": passive/unavailable (" .. entry.spellID .. ")")
-  else
-    local color = GetColorForSource(entry.source)
-    frame.Border:SetVertexColor(unpack(color))
-    debugPrint("Slot " .. entry.slot .. ": " .. entry.source .. " (" .. entry.spellID .. ")")
+    debugPrint("Slot " .. entry.slot .. ": " .. entry.source .. " - " .. entry.spellName)
   end
 end
 
