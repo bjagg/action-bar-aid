@@ -192,13 +192,16 @@ end
 local function applyColorToFrame(frame, color)
   if frame.Border then
     frame.Border:SetVertexColor(unpack(color))
+    frame.Border:Show()
   elseif frame.IconBorder then
     frame.IconBorder:SetVertexColor(unpack(color))
+    frame.IconBorder:Show()
   elseif frame.Icon then
     frame.Icon:SetVertexColor(unpack(color))
   else
     debugPrint("No colorable region found on " .. frame:GetName())
   end
+end
 end
 
 -- Apply visual highlight + log
